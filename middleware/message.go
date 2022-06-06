@@ -12,27 +12,29 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func GetAllMessages(w http.ResponseWriter, r *http.Request) {
+func GetAllOpenedMessages(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	payload := getAllMessages()
+	payload := getAllOpenedMessages()
 	json.NewEncoder(w).Encode(payload)
 }
 
-func getAllMessages() []primitive.M {
+func getAllOpenedMessages() []models.Message {
 	cur, err := messageCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var results []primitive.M
+	var results []models.Message
 	for cur.Next(context.Background()) {
-		var result bson.M
+		var result models.Message
 		e := cur.Decode(&result)
 		if e != nil {
 			log.Fatal(e)
 		}
-		results = append(results, result)
+		if result.IsOpened() {
+			results = append(results, result)			
+		}
 	}
 
 	cur.Close(context.Background())
