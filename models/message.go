@@ -13,5 +13,5 @@ type Message struct {
 }
 
 func (m *Message) IsOpened() bool {
-	return m.UnlocksAt != 0 && m.UnlocksAt < time.Now().UnixMilli()
+	return m.UnlocksAt != 0 && m.UnlocksAt < time.Now().Unix()
 }
