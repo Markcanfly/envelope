@@ -10,11 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// TODO swap out for separate functions for db setup, and a singleton Collection var
-
 var client *mongo.Client
 var messageCollection *mongo.Collection
-//var userCollection *mongo.Collection
+var userCollection *mongo.Collection
 
 func InitDb() {
 	loadEnv()
@@ -49,7 +47,7 @@ func connectToDb() {
 
 	db := client.Database("envelope")
 	messageCollection = db.Collection("messages")
-	//userCollection = db.Collection("users")
+	userCollection = db.Collection("users")
 }
 
 func DisconnectDb() {
