@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -14,23 +13,19 @@ var client *mongo.Client
 var messageCollection *mongo.Collection
 var userCollection *mongo.Collection
 
-func InitDb() {
-	loadEnv()
-	connectToDb()
+func InitDb(testing bool) {
+	connectToDb(testing)
 }
 
-func loadEnv() {
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+func connectToDb(testing bool) {
+	var uri string
+	if testing {
+		uri = os.Getenv("TEST_MONGODB_URI")
+	} else {
+		uri = os.Getenv("MONGODB_URI")
 	}
-}
-
-func connectToDb() {
-	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+		log.Fatal("You must set your 'MONGODB_URI'/'TEST_MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
 	var err error
 	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
