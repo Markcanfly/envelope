@@ -3,11 +3,29 @@ package middleware
 import (
 	"context"
 	"envelope/models"
-	"errors"
 	"log"
+	"net/http"
 )
 
-func CreateUser(username, email, password string) error {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	username := r.FormValue("username")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	err := createUser(username, email, password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func createUser(username, email, password string) error {
 	user, err := models.NewUser(username, email, password)
 	if err != nil {
 		return err
@@ -20,17 +38,3 @@ func CreateUser(username, email, password string) error {
 	return nil
 }
 
-// Get token for user
-func AuthenticateUser(username, password string) (string, error) {
-	var user *models.User
-	err := userCollection.FindOne(context.Background(), &models.User{Username: username}).Decode(&user)
-	if err != nil {
-		return "", errors.New("invalid username or password")
-	}
-	err = user.CheckPassword(password)
-	if err != nil {
-		return "", errors.New("invalid username or password")
-	}
-	token := models.CreateTokenFor(user)
-	return token, nil
-}

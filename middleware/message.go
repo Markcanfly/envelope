@@ -46,21 +46,26 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
+	tokenData, err := TokenAuth(w, r)
+	if err != nil {
+		return
+	}
 	var message models.Message
 	_ = json.NewDecoder(r.Body).Decode(&message)
+	message.User = tokenData.User.ID
 	createMessage(message)
 	json.NewEncoder(w).Encode(message)
 }
 
 func createMessage(message models.Message) {
+	if message.User == primitive.NilObjectID {
+		log.Fatal("didn't inject creator user into message, dev error")
+	}
 	_, err := messageCollection.InsertOne(context.Background(), message)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// fmt.Println("Inserted a Single Record ", insertResult.InsertID)
 }
 
 func DeleteMessage(w http.ResponseWriter, r *http.Request) {
@@ -69,14 +74,26 @@ func DeleteMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	params := mux.Vars(r)
-	deleteOneMessage(params["id"])
+	tokenData, err := TokenAuth(w, r)
+	if err != nil {
+		return
+	}
+	deleteOneMessage(params["id"], tokenData.User)
 	json.NewEncoder(w).Encode(params[""])
 }
 
-func deleteOneMessage(hexid string) {
+func deleteOneMessage(hexid string, user *models.User) {
 	id, _ := primitive.ObjectIDFromHex(hexid)
 	filter := bson.M{"_id": id}
-	_, err := messageCollection.DeleteOne(context.Background(), filter)
+	var message *models.Message
+	err := messageCollection.FindOne(context.Background(), filter).Decode(&message)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if message.User != user.ID {
+		log.Fatal("user doesn't own message")
+	}
+	_, err = messageCollection.DeleteOne(context.Background(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}

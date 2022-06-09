@@ -8,7 +8,7 @@ import (
 
 // Tokens stored in memory, but in real life it should be stored in database
 type TokenData struct {
-	user *User
+	User *User
 	timeout int64
 }
 const TTL = 5 * 60//seconds
