@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 
@@ -12,8 +13,10 @@ import (
 var client *mongo.Client
 var messageCollection *mongo.Collection
 var userCollection *mongo.Collection
+var currentlyTesting bool
 
 func InitDb(testing bool) {
+	currentlyTesting = testing
 	connectToDb(testing)
 }
 
@@ -43,6 +46,16 @@ func connectToDb(testing bool) {
 	db := client.Database("envelope")
 	messageCollection = db.Collection("messages")
 	userCollection = db.Collection("users")
+}
+
+func CleanDatabase() error {
+	if !currentlyTesting {
+		log.Fatal("Can't clean database in production")
+		return errors.New("can't clean database in production")
+	}
+	messageCollection.Drop(context.TODO())
+	userCollection.Drop(context.TODO())
+	return nil
 }
 
 func DisconnectDb() {

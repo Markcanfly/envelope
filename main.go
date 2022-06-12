@@ -11,7 +11,7 @@ import (
 
 // TODO user input validation
 func main() {
-	middleware.InitDb()
+	middleware.InitDb(false)
 	fmt.Println("Db initialized")
 	r := router.Router()
 	models.StartTokenCleanup()
