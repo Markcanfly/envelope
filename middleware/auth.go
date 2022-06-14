@@ -5,15 +5,18 @@ import (
 	"envelope/models"
 	"errors"
 	"net/http"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const authErrorMessage = "invalid username or password"
 
 // TODO XSS protection
 func Login(w http.ResponseWriter, r *http.Request) {
-	username := r.FormValue("username")
+	email := r.FormValue("email")
 	password := r.FormValue("password")
-	token, err := authenticateUser(username, password)
+	token, err := authenticateUser(email, password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -36,9 +39,9 @@ func TokenAuth(w http.ResponseWriter, r *http.Request) (*models.TokenData, error
 }
 
 // Get token for user
-func authenticateUser(username, password string) (string, error) {
-	var user *models.User
-	err := userCollection.FindOne(context.Background(), &models.User{Username: username}).Decode(&user)
+func authenticateUser(email, password string) (string, error) {
+	var user models.User
+	err := userCollection.FindOne(context.Background(), bson.D{primitive.E{Key: "email", Value:email}}).Decode(&user)
 	if err != nil {
 		return "", errors.New(authErrorMessage)
 	}
@@ -46,7 +49,7 @@ func authenticateUser(username, password string) (string, error) {
 	if err != nil {
 		return "", errors.New(authErrorMessage)
 	}
-	token := models.CreateTokenFor(user)
+	token := models.CreateTokenFor(&user)
 	return token, nil
 }
 

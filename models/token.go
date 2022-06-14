@@ -13,7 +13,7 @@ type TokenData struct {
 }
 const TTL = 5 * 60//seconds
 const TokenLength = 64
-var tokens map[string]TokenData
+var tokens map[string]TokenData = make(map[string]TokenData)
 
 func StartTokenCleanup() {
 	go func() {
