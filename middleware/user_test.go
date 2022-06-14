@@ -111,3 +111,25 @@ func TestCreateUserWithLongPassword(t *testing.T) {
 			rr.Code, http.StatusCreated)
 	}
 }
+
+func TestUnsuccessfulLogin(t *testing.T) {
+	rr := helpLogin("notareal@example.com", "notrealpassword")
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			rr.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestSuccessfulLogin(t *testing.T) {
+	rr := helpLogin("test@example.com", "bare_minimum_password")
+	if rr.Code != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			rr.Code, http.StatusOK)
+	}
+	localtoken := rr.Header()["Authorization"][0]
+	if localtoken == "" {
+		t.Errorf("handler returned empty token")
+	}
+}
+
+// TODO checks for input validation
