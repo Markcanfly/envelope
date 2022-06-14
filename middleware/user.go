@@ -12,7 +12,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
+	r.ParseForm()
 	username := r.FormValue("username")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
