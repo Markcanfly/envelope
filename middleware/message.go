@@ -44,7 +44,7 @@ func getAllOpenedMessages() []models.Message {
 func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type",  "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "PUT")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	tokenData, err := TokenAuth(w, r)
 	if err != nil {
@@ -53,19 +53,21 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	var message models.Message
 	_ = json.NewDecoder(r.Body).Decode(&message)
 	message.User = tokenData.User.ID
-	createMessage(message)
+	id := createMessage(message)
+	w.WriteHeader(http.StatusCreated)
+	message.ID = id // Hack created item id back
 	json.NewEncoder(w).Encode(message)
 }
 
-func createMessage(message models.Message) {
+func createMessage(message models.Message) primitive.ObjectID {
 	if message.User == primitive.NilObjectID {
 		log.Fatal("didn't inject creator user into message, dev error")
 	}
-	_, err := messageCollection.InsertOne(context.Background(), message)
-
+	result, err := messageCollection.InsertOne(context.Background(), message)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return result.InsertedID.(primitive.ObjectID)
 }
 
 func DeleteMessage(w http.ResponseWriter, r *http.Request) {
