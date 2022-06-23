@@ -73,9 +73,9 @@ func TestCreateUserWithSameEmail(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			rr_second.Code, http.StatusBadRequest)
 	}
-	if rr_second.Body.String() != "User with this email already exists\n" {
+	if rr_second.Body.String() != "email is already registered\n" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr_second.Body.String(), "User with this email already exists\n")
+			rr_second.Body.String(), "email is already registered\n")
 	}
 }
 
@@ -90,9 +90,9 @@ func TestUserCreatedWithSameName(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			rr_second.Code, http.StatusBadRequest)
 	}
-	if rr_second.Body.String() != "User with this username already exists\n" {
+	if rr_second.Body.String() != "username is already taken\n" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr_second.Body.String(), "User with this username already exists\n")
+			rr_second.Body.String(), "username is already taken\n")
 	}
 }
 
