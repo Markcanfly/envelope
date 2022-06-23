@@ -12,7 +12,7 @@ import (
 
 const authErrorMessage = "invalid username or password"
 
-// TODO XSS protection
+// TODO CSRF protection
 func Login(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")

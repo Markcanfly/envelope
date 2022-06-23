@@ -10,6 +10,7 @@ import (
 )
 
 // TODO user input validation
+// TODO CSRF for all POST requests
 func main() {
 	middleware.InitDb(false)
 	fmt.Println("Db initialized")
