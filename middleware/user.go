@@ -32,7 +32,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	case "email is already registered":
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusCreated)
+		//http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	case "username is already taken":
 		http.Error(w, err.Error(), http.StatusBadRequest)
