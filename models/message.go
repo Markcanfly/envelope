@@ -1,6 +1,8 @@
 package models
 
 import (
+	"envelope/models/validators"
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,4 +16,16 @@ type Message struct {
 
 func (m *Message) IsOpened() bool {
 	return m.UnlocksAt != 0 && m.UnlocksAt < time.Now().Unix()
+}
+
+func FromMap(data map[string][]string) (*Message, error) {
+	err := validators.ValidateMessageMap(data)
+	if err != nil {
+		return nil, err
+	}
+	message := &Message{}
+	message.Content = data["content"][0]
+	unlocksAt, _ := strconv.Atoi(data["unlocks_at"][0])
+	message.UnlocksAt = int64(unlocksAt)
+	return message, nil
 }
