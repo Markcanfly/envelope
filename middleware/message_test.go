@@ -7,13 +7,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 )
 
 func helpCreateMessage(content string, timestamp int64) *httptest.ResponseRecorder {
-	message := fmt.Sprintf(`{"content":"%s", "unlocks_at": %d}`, content, timestamp)
-	req, _ := http.NewRequest("POST", "", bytes.NewBufferString(message))	
+	data := url.Values{}
+	data.Set("content", content)
+	data.Set("unlocks_at", fmt.Sprintf("%d", timestamp))
+
+	req, _ := http.NewRequest("POST", "", bytes.NewBufferString(data.Encode()))
 	req.Header.Set("Authorization", token)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	rr := httptest.NewRecorder()
@@ -56,13 +60,16 @@ func TestTryCreateMessageWithoutAuth(t *testing.T) {
 
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
+			status, http.StatusUnauthorized)
 	}
 }
 
 func TestCreateMessage(t *testing.T) {
-	message := fmt.Sprintf(`{"content":"titkos üzenet", "unlocks_at": %d}`, time.Now().Unix())
-	req, err := http.NewRequest("POST", "", bytes.NewBufferString(message))	
+	data := url.Values{}
+	data.Set("content", "titkos üzenet")
+	data.Set("unlocks_at", fmt.Sprintf("%d", time.Now().Unix()))
+	
+	req, err := http.NewRequest("POST", "", bytes.NewBufferString(data.Encode()))	
 	if err != nil {
 		t.Fatal(err)
 	}
