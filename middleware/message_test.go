@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"envelope/models"
 	"fmt"
@@ -10,6 +11,9 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func helpCreateMessage(content string, timestamp int64) *httptest.ResponseRecorder {
@@ -25,26 +29,6 @@ func helpCreateMessage(content string, timestamp int64) *httptest.ResponseRecord
 
 	handler.ServeHTTP(rr, req)
 	return rr
-}
-
-func TestGetOpenedMessagesEmpty(t *testing.T) {
-	req, err := http.NewRequest("GET", "", nil)	
-	if err != nil {
-		t.Fatal(err)
-	}
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetAllOpenedMessages)
-
-	handler.ServeHTTP(rr, req)
-
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-	}
-	if rr.Body.String() != "null\n" {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), "[]")
-	}
 }
 
 func TestTryCreateMessageWithoutAuth(t *testing.T) {
@@ -98,5 +82,21 @@ func TestCreateMessageCheckData(t *testing.T) {
 	if message.UnlocksAt != currenttime {
 		t.Errorf("handler returned wrong unlocks_at: got %v want %v",
 			message.UnlocksAt, currenttime)
+	}
+}
+
+func TestCreateMessageThenCheckDb(t *testing.T) {
+	currenttime := time.Now().Unix()
+	rr := helpCreateMessage("titkos üzenet", currenttime)
+	var message models.Message
+	json.Unmarshal(rr.Body.Bytes(), &message)
+
+	id, _ := primitive.ObjectIDFromHex(message.ID.Hex())
+	filter := bson.M{"_id": id}
+	var dbMessage *models.Message
+	err := messageCollection.FindOne(context.Background(), filter).Decode(&dbMessage)
+	if err != nil || dbMessage.Content != "titkos üzenet" || dbMessage.UnlocksAt != currenttime || dbMessage.User != message.User {
+		t.Errorf("mismatch between dbMessage %v and created message %v",
+			dbMessage, message)
 	}
 }
