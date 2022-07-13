@@ -46,12 +46,15 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	r.ParseForm()
 	tokenData, err := TokenAuth(w, r)
 	if err != nil {
 		return
 	}
-	var message models.Message
-	_ = json.NewDecoder(r.Body).Decode(&message)
+	message, err := models.FromMap(r.Form)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
 	message.User = tokenData.User.ID
 	id := createMessage(message)
 	w.WriteHeader(http.StatusCreated)
@@ -59,7 +62,7 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(message)
 }
 
-func createMessage(message models.Message) primitive.ObjectID {
+func createMessage(message *models.Message) primitive.ObjectID {
 	if message.User == primitive.NilObjectID {
 		log.Fatal("didn't inject creator user into message, dev error")
 	}
